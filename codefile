@@ -1,0 +1,48 @@
+    %  Compiled on Tue Jan 04 06:53:07 EST 2011
+    %  Author(s): Joseph Bergin
+    %BEGIN 
+    %	READ a, b; 
+    %    Implicit declaration of: a
+    RDI     $a$
+    %    Implicit declaration of: b
+    RDI     $b$
+    %	WRITE a, b; 
+    WRI     $a$
+    WRI     $b$
+    WRNL
+    %	c := a + b; 
+    %    Implicit declaration of: c
+    LD      R0,  $a$
+    IA      R0,  $b$
+    STO     R0,  $c$
+    %	WRITE a, b, c; 
+    WRI     $a$
+    WRI     $b$
+    WRI     $c$
+    WRNL
+    %	WRITE a+b, a - 20, b - 30, c, (a - b); 
+    LD      R0,  $a$
+    IA      R0,  $b$
+    WRI     R0
+    LD      R0,  $a$
+    IS      R0,  #20
+    WRI     R0
+    LD      R0,  $b$
+    IS      R0,  #30
+    WRI     R0
+    WRI     $c$
+    LD      R0,  $a$
+    IS      R0,  $b$
+    WRI     R0
+    WRNL
+    %END. 
+    %  
+    HALT
+LABEL    $a$
+    SKIP    2
+LABEL    $b$
+    SKIP    2
+LABEL    $c$
+    SKIP    2
+     %    End of Compilation  --    Allocated registers: None
+     %    There were no errors.

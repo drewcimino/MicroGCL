@@ -1,0 +1,5 @@
+BEGIN
+	READ a;
+	WRITE a;
+	WRITE a+1;
+END.

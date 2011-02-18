@@ -1,0 +1,7 @@
+BEGIN
+	READ a, b;
+	WRITE a, b;
+	c := a + b;
+	WRITE a, b, c;
+	WRITE a+b, a - 20, b - 30, c, (a - b);
+END.

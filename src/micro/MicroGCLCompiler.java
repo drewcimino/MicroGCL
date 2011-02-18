@@ -666,17 +666,17 @@ class MultiplyOperator { // Typed enumeration.
 	private final String code;
 }
 class RelativeOperator { // Typed enumeration.
-	private RelativeOperator(final String code, final String relOp) {
-		this.code = code;
+	private RelativeOperator(final String relOp) {
+		this.code = "IC";
 		this.jumpCode = relOp;
 	}
 	
-	public static final RelativeOperator GREATERTHAN = new RelativeOperator("IC","JLE");
-	public static final RelativeOperator GREATERTHANOREQUAL = new RelativeOperator("IC","JLT");
-	public static final RelativeOperator LESSTHAN = new RelativeOperator("IC","JGE");
-	public static final RelativeOperator LESSTHANOREQUAL = new RelativeOperator("IC","JGT");
-	public static final RelativeOperator EQUAL = new RelativeOperator("IC","JNE");
-	public static final RelativeOperator INEQUAL = new RelativeOperator("IC","JEQ");
+	public static final RelativeOperator GREATERTHAN = new RelativeOperator("JLE");
+	public static final RelativeOperator GREATERTHANOREQUAL = new RelativeOperator("JLT");
+	public static final RelativeOperator LESSTHAN = new RelativeOperator("JGE");
+	public static final RelativeOperator LESSTHANOREQUAL = new RelativeOperator("JGT");
+	public static final RelativeOperator EQUAL = new RelativeOperator("JNE");
+	public static final RelativeOperator INEQUAL = new RelativeOperator("JEQ");
 	
 	public String samCode() {
 		return code;

@@ -917,6 +917,11 @@ class CodeGenerator {
 		}
 	}
 	
+	public String currentLabel(){
+		currentLabel++;
+		return "LABEL"+currentLabel;
+	}
+	
 	private String pad(final String value){
 		int opCodePadLength = 8;
 		String result = value;
@@ -936,6 +941,7 @@ class CodeGenerator {
 	private final boolean freeRegisters[] = new boolean[TOTAL_REGISTERS];
 	private final SymbolTable symbolTable;
 	private static final String BLANKS = "    ";//Left padding of instructions
+	private static int currentLabel = -1;
 }
 
 // ------------------------------ SymbolTable -------------------------------

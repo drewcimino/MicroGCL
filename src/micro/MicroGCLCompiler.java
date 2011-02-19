@@ -487,17 +487,17 @@ class Parser {
 	private RelativeOperator guard(){
 		//<guard> -> <expression> <rel op> <expression>
 		Expression rightCondition;
-		RelativeOperator relationOp = relativeOperator(scanner.currentToken());
+		Token current = scanner.currentToken();
+		RelativeOperator relationOp = relativeOperator(current);
 		Expression result = expression();
-		if (scanner.currentToken() == Token.GREATERTHAN_SYMBOL 	|| scanner.currentToken() == Token.GREATEROREQUAL_SYMBOL || 
-				scanner.currentToken() == Token.LESSTHAN_SYMBOL || scanner.currentToken() == Token.LESSOREQUAL_SYMBOL || 
-				scanner.currentToken() == Token.EQUAL_SYMBOL 	|| scanner.currentToken() == Token.INEQUAL_SYMBOL){
-			relationOp = relativeOperator(scanner.currentToken());
+		if (current == Token.GREATERTHAN_SYMBOL 	|| current == Token.GREATEROREQUAL_SYMBOL || 
+				current == Token.LESSTHAN_SYMBOL 	|| current == Token.LESSOREQUAL_SYMBOL || 
+				current == Token.EQUAL_SYMBOL 		|| current == Token.INEQUAL_SYMBOL){
 			rightCondition = expression();
 			result = semantics.relativeExpression(result, relationOp, rightCondition);
 		}
 		else{
-			syntaxError(scanner.currentToken());
+			syntaxError(current);
 		}
 		return relationOp;
 	}

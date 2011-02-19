@@ -443,16 +443,15 @@ class Parser {
 			semantics.endWrite();
 		} else if (scanner.currentToken() == Token.IF_SYMBOL) {
 			scanner.match(Token.IF_SYMBOL);
-			LabelExpression jumpToElse = new LabelExpression(nextLabelNumber());
-			semantics.ifTest(guard(), jumpToElse);
+			RelativeOperator relOp = guard();
+			IfRecord record = semantics.ifTest(relOp);
 			scanner.match(Token.THEN_SYMBOL);
 			statementList();
-			LabelExpression jumpToEnd = new LabelExpression(nextLabelNumber());
-			semantics.endIfPart(jumpToEnd);
+			semantics.endIfPart(record);
 			scanner.match(Token.ELSE_SYMBOL);
-			semantics.beginElsePart(jumpToElse);
+			semantics.beginElsePart(record);
 			statementList();
-			semantics.endIf(jumpToEnd);
+			semantics.endIfElse(record);
 			scanner.match(Token.ENDIF_SYMBOL);
 			scanner.match(Token.SEMICOLON);
 		}else if (scanner.currentToken() == Token.SKIP_SYMBOL) {
@@ -614,11 +613,6 @@ class Parser {
 		scanner.match(Token.IDENTIFIER);
 		return result;
 	}
-	
-	public int nextLabelNumber(){
-		labelNumber++;
-		return labelNumber;
-	}
 
 	public int errors() {
 		return errors;
@@ -628,7 +622,6 @@ class Parser {
 	private final Scanner scanner;
 	private final SymbolTable symbolTable;
 	private final SemanticActions semantics;
-	private int labelNumber = 0;
 	private int errors = 0;
 }
 
@@ -690,6 +683,27 @@ class RelativeOperator { // Typed enumeration.
 	private final String jumpCode;
 }
 
+class IfRecord{
+	public IfRecord(RelativeOperator operator, String firstLabel, String secondLabel){
+		relOp = operator;
+		endOfIf_Label = firstLabel;
+		endOfElse_Label = secondLabel;
+	}
+	
+	public String endOfIf(){
+		return endOfIf_Label;
+	}
+	
+	public String endOfElse(){
+		return endOfElse_Label;
+	}
+	
+	private RelativeOperator relOp;
+	private String endOfIf_Label;
+	private String endOfElse_Label;
+	
+}
+
 // ------------------------------ Expression --------------------------
 interface Expression {
 	public abstract String samCode();
@@ -733,18 +747,6 @@ class TemporaryExpression implements Expression { // Represents a cpu register: 
 	}
 
 	private final int which; // The register number
-}
-
-class LabelExpression implements Expression { // Represents a label title: Immutable
-	public LabelExpression(final int newId) {
-		this.id = new String(""+newId);
-	}
-
-	public String samCode() {
-		return id;
-	}
-
-	private final String id; // The spelling of the label's title
 }
 
 // ------------------------------ SemanticActions Class ------------------
@@ -798,20 +800,27 @@ class SemanticActions {
 		return register;  
 	}
 	
-	public void ifTest(RelativeOperator relOp, LabelExpression target){
-		codegenerator.generate1Address(relOp.jumpCode(), target);		
+	public IfRecord ifTest(RelativeOperator relOp){
+		
+		String endOfIf_Label = codegenerator.generateLabel();
+		String endOfElse_Label = codegenerator.generateLabel();
+		
+		IfRecord ifRecord = new IfRecord(relOp, endOfIf_Label, endOfElse_Label);
+		codegenerator.generateJump(relOp.samCode(), endOfIf_Label);
+		
+		return ifRecord;
 	}
 	
-	public void endIfPart(LabelExpression target){
-		codegenerator.generate1Address("JMP", target);
+	public void endIfPart(IfRecord record){
+		codegenerator.generateJump("JMP", record.endOfElse());
 	}
 	
-	public void beginElsePart(LabelExpression target){
-		codegenerator.generate1Address("LABEL", target);
+	public void beginElsePart(IfRecord record){
+		codegenerator.generateJump("LABEL", record.endOfIf());
 	}
 	
-	public void endIf(LabelExpression target){
-		codegenerator.generate1Address("LABEL", target);
+	public void endIfElse(IfRecord record){
+		codegenerator.generateJump("LABEL", record.endOfElse());
 	}
 
 	public void assign(final Expression target, final Expression source) {
@@ -917,9 +926,13 @@ class CodeGenerator {
 		}
 	}
 	
-	public String currentLabel(){
+	public String generateLabel(){
 		currentLabel++;
 		return "LABEL"+currentLabel;
+	}
+	
+	public void generateJump(String jumpCode, String label){
+		out.println(BLANKS + pad(jumpCode) + label);
 	}
 	
 	private String pad(final String value){

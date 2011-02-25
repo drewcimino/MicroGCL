@@ -447,9 +447,8 @@ class Parser {
 			IfRecord record = semantics.ifTest(relOp);
 			scanner.match(Token.THEN_SYMBOL);
 			statementList();
-			semantics.endIfPart(record);
 			scanner.match(Token.ELSE_SYMBOL);
-			semantics.beginElsePart(record);
+			semantics.endIfBeginElse(record);
 			statementList();
 			semantics.endIfElse(record);
 			scanner.match(Token.ENDIF_SYMBOL);
@@ -490,15 +489,8 @@ class Parser {
 		Token current = scanner.currentToken();
 		RelativeOperator relationOp = relativeOperator(current);
 		Expression result = expression();
-		if (current == Token.GREATERTHAN_SYMBOL 	|| current == Token.GREATEROREQUAL_SYMBOL || 
-				current == Token.LESSTHAN_SYMBOL 	|| current == Token.LESSOREQUAL_SYMBOL || 
-				current == Token.EQUAL_SYMBOL 		|| current == Token.INEQUAL_SYMBOL){
 			rightCondition = expression();
-			result = semantics.relativeExpression(result, relationOp, rightCondition);
-		}
-		else{
-			syntaxError(current);
-		}
+			result = semantics.relativeExpression(result, rightCondition);
 		return relationOp;
 	}
 
@@ -660,8 +652,7 @@ class MultiplyOperator { // Typed enumeration.
 }
 class RelativeOperator { // Typed enumeration.
 	private RelativeOperator(final String relOp) {
-		this.code = "IC";
-		this.jumpCode = relOp;
+		this.code = relOp;
 	}
 	
 	public static final RelativeOperator GREATERTHAN = new RelativeOperator("JLE");
@@ -674,18 +665,12 @@ class RelativeOperator { // Typed enumeration.
 	public String samCode() {
 		return code;
 	}
-	
-	public String jumpCode(){
-		return jumpCode;
-	}
 
 	private final String code;
-	private final String jumpCode;
 }
 
 class IfRecord{
-	public IfRecord(RelativeOperator operator, String firstLabel, String secondLabel){
-		relOp = operator;
+	public IfRecord(String firstLabel, String secondLabel){
 		endOfIf_Label = firstLabel;
 		endOfElse_Label = secondLabel;
 	}
@@ -698,7 +683,6 @@ class IfRecord{
 		return endOfElse_Label;
 	}
 	
-	private RelativeOperator relOp;
 	private String endOfIf_Label;
 	private String endOfElse_Label;
 	
@@ -793,9 +777,9 @@ class SemanticActions {
 		return register;
 	}
 	
-	public Expression relativeExpression(final Expression left, final RelativeOperator relativeOp, final Expression right){
+	public Expression relativeExpression(final Expression left, final Expression right){
 		TemporaryExpression register = codegenerator.loadRegister(left);
-		codegenerator.generate2Address(relativeOp.samCode(), register, right);
+		codegenerator.generate2Address("IC", register, right);
 		codegenerator.freeTemporary(right);
 		return register;  
 	}
@@ -805,17 +789,14 @@ class SemanticActions {
 		String endOfIf_Label = codegenerator.generateLabel();
 		String endOfElse_Label = codegenerator.generateLabel();
 		
-		IfRecord ifRecord = new IfRecord(relOp, endOfIf_Label, endOfElse_Label);
-		codegenerator.generateJump(relOp.samCode(), endOfIf_Label);
+		IfRecord ifRecord = new IfRecord(endOfIf_Label, endOfElse_Label);
+		codegenerator.generateJump("IC", endOfIf_Label);
 		
 		return ifRecord;
 	}
 	
-	public void endIfPart(IfRecord record){
+	public void endIfBeginElse(IfRecord record){
 		codegenerator.generateJump("JMP", record.endOfElse());
-	}
-	
-	public void beginElsePart(IfRecord record){
 		codegenerator.generateJump("LABEL", record.endOfIf());
 	}
 	
